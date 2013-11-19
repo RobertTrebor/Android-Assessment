@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">MapsApp</string>
+    <string name="action_settings">Settings</string>
+    
+    <string name="label_tv_latitude">Latitude</string>
+    <string name="label_tv_longitude">Longitude</string>
+    <string name="btn_gpsLocate">Current Location</string>
+    <string name="btn_go">Go!</string>
+</resources>
