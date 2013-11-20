@@ -60,7 +60,7 @@ public class MainActivity extends Activity {
 
 	protected static StringBuilder jsonstr;
 	private String message;
-	private ArrayList<Car> carList = new ArrayList<Car>();
+	private List<Car> carList = new ArrayList<Car>();
 
 	Handler handler = new Handler() {
 		public void handleMessage(Message msg) {
@@ -69,7 +69,8 @@ public class MainActivity extends Activity {
 			message = str;
 			String jsonResponse = message;
 			carList = parseJson(jsonResponse);
-			showCarsOnMap(carList);
+			List<Car> filteredCarList= filterCarsByDistance(carList, new GeoPoint(latitude, longitude), SEARCH_RADIUS_KM);
+			showCarsOnMap(filteredCarList);
 		}
 	};
 	
@@ -133,7 +134,7 @@ public class MainActivity extends Activity {
 		initLocation();
 	}
 	
-	private ArrayList<Car> parseJson(String dbReturned) {
+	private List<Car> parseJson(String dbReturned) {
 	
 		// Parse JSON and retrieve relevant data
 
@@ -263,9 +264,19 @@ public class MainActivity extends Activity {
 		// ###################################### TO IMPLEMENT
 		// Filter the list of cars by a location within the specified radius
 		
-		return Collections.emptyList();
+		List<Car> filteredCarList = new ArrayList<Car>();
+		
+
+		for(Car car : cars) {
+			if (((car.position).distanceTo(location) / 1000) < searchRadiusKm) {
+				filteredCarList.add(car);
+			}
+
+		}
+		return filteredCarList;
 	}
 
+	
 	private void showCarsOnMap(List<Car> cars) {
 		List<OverlayItem> items = new ArrayList<OverlayItem>();
 
