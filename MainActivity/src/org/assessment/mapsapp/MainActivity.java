@@ -60,7 +60,7 @@ public class MainActivity extends Activity {
 
 	protected static StringBuilder jsonstr;
 	private String message;
-	ArrayList<Car> carList = new ArrayList<Car>();
+	private ArrayList<Car> carList = new ArrayList<Car>();
 
 	Handler handler = new Handler() {
 		public void handleMessage(Message msg) {
@@ -69,9 +69,70 @@ public class MainActivity extends Activity {
 			message = str;
 			String jsonResponse = message;
 			carList = parseJson(jsonResponse);
+			showCarsOnMap(carList);
 		}
 	};
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		
+		btn_go = (Button) findViewById(R.id.btn_go);
+		btn_go.setOnClickListener(new OnClickListener() {
 
+			@Override
+			public void onClick(View v) {
+				updateLocation(new GeoPoint(latitude,longitude));
+			}
+		});
+
+		et_latitude = (EditText) findViewById(R.id.et_latitude);
+		et_longitude = (EditText) findViewById(R.id.et_longitude);
+
+		lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+		if (lm != null) {
+
+			ll = new MyLocationListener(this);
+
+			if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+				lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 50, 5,
+						ll);
+				//Toast.makeText(getApplicationContext(), "GPS an",
+				//Toast.LENGTH_SHORT).show();
+			} else {
+				Toast.makeText(getApplicationContext(), "GPS aus",
+						Toast.LENGTH_SHORT).show();
+			}
+
+		}
+		btn_gpsLocate = (Button) findViewById(R.id.btn_gpsLocate);
+		btn_gpsLocate.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				System.out.println("BUTTON GPS LOCATE WAS CLICKED!");
+				provider = LocationManager.GPS_PROVIDER;
+
+				if (provider != null && !provider.equals("")) {
+					
+					// make sure we have some location data
+					location = lm.getLastKnownLocation(provider);
+
+					if (location != null) {
+						latitude = location.getLatitude();
+						longitude = location.getLongitude();
+						et_latitude.setText(String.valueOf(latitude));
+						et_longitude.setText(String.valueOf(longitude));
+					}
+				}
+			}
+		});
+
+		initLocation();
+	}
+	
 	private ArrayList<Car> parseJson(String dbReturned) {
 	
 		// Parse JSON and retrieve relevant data
@@ -113,81 +174,13 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-
-		btn_go = (Button) findViewById(R.id.btn_go);
-		btn_go.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				updateLocation(new GeoPoint(latitude,longitude));
-				showCarsOnMap(carList);
-			}
-		});
-
-		et_latitude = (EditText) findViewById(R.id.et_latitude);
-		et_longitude = (EditText) findViewById(R.id.et_longitude);
-
-		lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-		if (lm != null) {
-
-			ll = new MyLocationListener(this);
-
-			if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-				lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 50, 5,
-						ll);
-				// Toast.makeText(getApplicationContext(), "GPS an",
-				// Toast.LENGTH_SHORT).show();
-			} else {
-				Toast.makeText(getApplicationContext(), "GPS aus",
-						Toast.LENGTH_SHORT).show();
-			}
-
-		}
-		btn_gpsLocate = (Button) findViewById(R.id.btn_gpsLocate);
-		btn_gpsLocate.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				System.out.println("BUTTON GPS LOCATE WAS CLICKED!");
-				provider = LocationManager.GPS_PROVIDER;
-
-				if (provider != null && !provider.equals("")) {
-					// Toast.makeText(getApplicationContext(), "Provider: " +
-					// provider, Toast.LENGTH_SHORT).show();
-
-					// damit man bei Start des Handys nicht total ohne Location
-					// dasteht
-					location = lm.getLastKnownLocation(provider);
-
-					if (location != null) {
-						latitude = location.getLatitude();
-						longitude = location.getLongitude();
-
-						Log.d("---LOCATION---", "longitude: " + latitude
-								+ " latitude: " + longitude);
-
-						et_latitude.setText(String.valueOf(latitude));
-						et_longitude.setText(String.valueOf(longitude));
-					}
-				}
-
-			}
-		});
-
-		initLocation();
-	}
-
 	private void initLocation() {
 		this.map = (MapView) this.findViewById(R.id.mapview);
 		this.map.setBuiltInZoomControls(true);
 		this.controller = map.getController();
-
-		//updateLocation(new GeoPoint(latitude, longitude));
+		this.controller.setZoom(12);
+		this.controller.setCenter(new GeoPoint(latitude,longitude));
+		
 	}
 
 	private void updateLocation(GeoPoint location) {
@@ -199,8 +192,7 @@ public class MainActivity extends Activity {
 
 		// ###################################### TO IMPLEMENT
 
-		//TODO Show cars on map
-		
+		// Show cars on map
 
 	}
 
@@ -235,8 +227,6 @@ public class MainActivity extends Activity {
 					try {
 
 						while ((line = reader.readLine()) != null) {
-							System.out
-									.println("ReadLine Ausgabe" + line + "\n");
 							jsonstr.append((line + "\n"));
 						}
 
@@ -302,6 +292,7 @@ public class MainActivity extends Activity {
 				return false;
 			}
 		};
+		
 		ItemizedIconOverlay<OverlayItem> overlay = new ItemizedIconOverlay<OverlayItem>(
 				getApplicationContext(), items, listener);
 
